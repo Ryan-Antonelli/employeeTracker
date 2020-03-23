@@ -8,13 +8,13 @@ var managerID;
 var connection = mysql.createConnection({
     host: "localhost",
   
-    // Your port; if not 3306   
+    //port   
     port: 3306,
   
-    // Your username
+    //username
     user: "root",
   
-    // Your password
+    //password
     password: "spulgorth",
     database: "employee_trackerDB"
   });
@@ -30,8 +30,8 @@ function start() {
       .prompt({
         name: "Add",
         type: "list",
-        message: "Would you like to add a new [DEPT], [ROLE], [EMPLOYEE], or [EXIT]?",
-        choices:["DEPT", "ROLE", "EMPLOYEE", "EXIT"]
+        message: "Would you like to add a new [DEPT], [ROLE], [EMPLOYEE], view a [DEPT], [ROLE], or [EMPLOYEE], change an employee [ROLE], or [EXIT]?",
+        choices:["DEPT", "ROLE", "EMPLOYEE", new inquirer.Separator(), "VIEW_DEPT", "VIEW_ROLE", "VIEW_EMPLOYEE", "CHANGE_ROLE", "EXIT"]
       })
       .then(function(answer) {
         if (answer.Add === "DEPT") {
@@ -43,9 +43,21 @@ function start() {
         else if (answer.Add === "EMPLOYEE") {
           addEmployee();
         }
+        else if (answer.Add === "VIEW_DEPT") {
+          viewDept();
+        }     
+        else if (answer.Add === "VIEW_ROLE") {
+          viewRole();
+        }  
+        else if (answer.Add === "VIEW_EMPLOYEE") {
+          viewEmployee();
+        }  
+        else if (answer.Add === "CHANGE_ROLE") {
+          // changeRole();
+        }  
         else if (answer.Add === "EXIT") {
           connection.end();
-        }        
+        }     
         else {
           connection.end();
         }
@@ -200,5 +212,88 @@ function addEmployee() {
           }
         )
       }  
+    })
+}
+
+function viewDept() {
+  inquirer
+    .prompt([
+      {
+        name: "name",
+        type: "input",
+        message: "What is the name of the department you would like to view?"
+      }
+    ])
+    .then(function(answer){
+      connection.query(
+        `SELECT * FROM department WHERE name = "${answer.name}"`,
+        
+        function(err, results) {
+          if (err) throw err;
+          console.log(results);
+          start();
+        }
+      )
+    })
+}
+
+function viewRole() {
+  inquirer
+    .prompt([
+      {
+        name: "name",
+        type: "input",
+        message: "What is the name of the role you would like to view?"
+      }
+    ])
+    .then(function(answer){
+      connection.query(
+        `SELECT * FROM role WHERE name = "${answer.name}"`,
+        
+        function(err, results) {
+          if (err) throw err;
+          
+          else if (results.length === 0) {
+            console.log("specified role not found")
+            start();
+          };
+          
+          console.log(results);
+          start();
+        }
+      )
+    })
+}
+
+function viewEmployee() {
+  inquirer
+    .prompt([
+      {
+        name: "firstName",
+        type: "input",
+        message: "What is the christian name of the employee you would like to view?"
+      },
+      {
+        name: "lastName",
+        type: "input",
+        message: "What is the family name of the employee you would like to view?"
+      }
+    ])
+    .then(function(answer){
+      connection.query(
+        `SELECT * FROM employee WHERE (first_name = "${answer.firstName}" AND last_name = "${answer.lastName}")`,
+        
+        function(err, results) {
+          if (err) throw err;
+          
+          else if (results.length === 0) {
+            console.log("specified employee not found")
+            start();
+          };
+          
+          console.log(results);
+          start();
+        }
+      )
     })
 }
