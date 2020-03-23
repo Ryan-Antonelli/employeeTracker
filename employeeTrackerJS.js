@@ -31,7 +31,7 @@ function start() {
         name: "Add",
         type: "list",
         message: "Would you like to add a new [DEPT], [ROLE], [EMPLOYEE], view a [DEPT], [ROLE], or [EMPLOYEE], change an employee [ROLE], or [EXIT]?",
-        choices:["DEPT", "ROLE", "EMPLOYEE", new inquirer.Separator(), "VIEW_DEPT", "VIEW_ROLE", "VIEW_EMPLOYEE", "CHANGE_ROLE", "EXIT"]
+        choices:["DEPT", "ROLE", "EMPLOYEE", new inquirer.Separator(), "VIEW_DEPT", "VIEW_ROLE", "VIEW_EMPLOYEE", new inquirer.Separator(), "CHANGE_ROLE", new inquirer.Separator(), "EXIT"]
       })
       .then(function(answer) {
         if (answer.Add === "DEPT") {
@@ -53,7 +53,7 @@ function start() {
           viewEmployee();
         }  
         else if (answer.Add === "CHANGE_ROLE") {
-          // changeRole();
+          changeRole();
         }  
         else if (answer.Add === "EXIT") {
           connection.end();
@@ -295,5 +295,62 @@ function viewEmployee() {
           start();
         }
       )
+    })
+}
+
+function changeRole() {
+  inquirer
+    .prompt([
+      {
+        name: "firstName",
+        type: "input",
+        message: "What is the christian name of the employee changing roles?"
+      },
+      {
+        name: "lastName",
+        type: "input",
+        message: "What is the family name of the employee changing roles?"
+      },
+      {
+        name: "newRole",
+        type: "input",
+        message: "What is the name of the employee's new role?"
+      }
+    ])
+    .then(function(answer){
+      connection.query(
+       `SELECT id FROM role WHERE title = "${answer.newRole}"`,
+       function(err, results) {
+        if (err) throw err;
+        
+        else if (results.length === 0) {
+          console.log("specified employee or role not found")
+          start();
+        };
+        
+        let newRoleID = results[0].id;
+        console.log(newRoleID);
+        roleUpdate(newRoleID);
+      }
+      )
+      
+      function roleUpdate(newRoleID) {
+        console.log(answer.firstName);
+        connection.query(
+          `UPDATE employee SET role_id = "${newRoleID}" WHERE (first_name = "${answer.firstName}" AND last_name = "${answer.lastName}")`,
+          
+            function(err, results) {
+              if (err) throw err;
+              
+              else if (results.length === 0) {
+                console.log("employee or role not found. Please enter valid data")
+                start();
+              };
+              
+              console.log(results);
+              start();
+            }
+        )
+      }
     })
 }
